@@ -553,6 +553,7 @@
     <p><strong>Data</strong>: The percentage values represent the wind distribution in each direction (N, NE, E, etc.).</p>
 </div>
 
+<div id="footer"></div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -691,6 +692,11 @@
             percentageText.textContent = percentage + '% ' + direction;
         }
     });
+    fetch('footer.html')
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById('footer').innerHTML = data;
+      });
 
 </script>
 </body>

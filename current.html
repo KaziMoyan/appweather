@@ -889,8 +889,17 @@
 
             <!-- Atmospheric Pressure Card -->
             
-        
+            <div id="footer"></div>
 
     </div>
+    <script>
+      
+        // Load footer.html
+        fetch('footer.html')
+          .then(res => res.text())
+          .then(data => {
+            document.getElementById('footer').innerHTML = data;
+          });
+      </script>
 </body>
 </html>

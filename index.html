@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WeatherCloud - WafnaMotoPark</title>
+    <!-- Leaflet CSS must be loaded before Tailwind to prevent style conflicts -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .high-temp {
+            color: #d9534f;
+        }
+
+        .low-temp {
+            color: #5bc0de;
+        }
+
+        /* Enhanced map container styles */
+        .map-container {
+            position: relative;
+            width: 100%;
+            min-height: 400px;
+            height: 400px;
+            background-color: #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Ensure the map fills the container */
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Responsive map height */
+        @media (max-width: 640px) {
+            .map-container {
+                min-height: 300px;
+                height: 300px;
+            }
+        }
+
+        /* Leaflet specific overrides */
+        .leaflet-container {
+            height: 100%;
+            width: 100%;
+            background: #e5e7eb;
+        }
+
+        /* Map loading spinner */
+        .map-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0088cc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Map error message */
+        .map-error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            z-index: 2;
+            display: none;
+        }
+
+        /* Fix for observer profile layout */
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .profile-label {
+            font-weight: 600;
+            color: #374151;
+            flex: 1 1 40%;
+            text-align: right;
+            padding-right: 1rem;
+        }
+
+        .profile-value {
+            flex: 1 1 60%;
+            text-align: left;
+            color: #4b5563;
+        }
+
+        .profile-value a {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+
+        /* Custom map controls */
+        .custom-map-control {
+            background: white;
+            padding: 8px;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .custom-map-control:hover {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="bg-[#0088cc] text-white py-4 px-6 shadow-md">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-cloud text-2xl"></i>
+                <span class="text-xl font-normal tracking-wide">WeatherCloud</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="#" class="flex items-center gap-1 hover:text-gray-200">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <a href="#" class="flex items-center gap-1 hover:text-gray-200">
+                    <i class="fas fa-map"></i>
+                    <span>Map</span>
+                </a>
+                <button class="bg-[#4CAF50] px-4 py-1 rounded text-white hover:bg-[#45a049] transition duration-200">Sign up</button>
+                <button class="text-white hover:text-gray-200 transition duration-200">Sign in</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-6">
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h1 class="text-4xl text-gray-700 font-light mb-2">WafnaMotoPark</h1>
+                <div class="flex items-center text-gray-600 mb-2">
+                    <i class="fas fa-map-marker-alt mr-2"></i>
+                    <span>Ronchi dei Legionari | 6:45 AM (UTC+02:00)</span>
+                </div>
+                <div class="text-gray-500 text-sm">Last updated 15 minutes ago</div>
+            </div>
+            <div class="flex space-x-4">
+                <button class="p-2 text-[#0088cc] hover:bg-gray-100 rounded-full transition duration-200">
+                    <i class="fas fa-chart-line"></i>
+                </button>
+                <button class="p-2 text-[#0088cc] hover:bg-gray-100 rounded-full transition duration-200">
+                    <i class="far fa-star"></i>
+                </button>
+                <button class="p-2 text-[#0088cc] hover:bg-gray-100 rounded-full transition duration-200">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+                <button class="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition duration-200">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex border-b border-gray-200 mb-6">
+            <a href="index.html">
+                <button class="px-6 py-3 text-[#0088cc] border-b-2 border-[#0088cc] -mb-1 flex items-center">
+                    <i class="fas fa-user mr-2"></i>
+                    Profile
+                </button>
+            </a>
+            <a href="current.html">
+                <button class="px-6 py-3 text-gray-600 flex items-center hover:text-[#0088cc]">
+                    <i class="fas fa-cloud mr-2"></i>
+                    Current
+                </button>
+            </a>
+            <a href="wind.html">
+                <button class="px-6 py-3 text-gray-600 flex items-center hover:text-[#0088cc]">
+                    <i class="fas fa-wind mr-2"></i>
+                    Wind
+                </button>
+            </a>
+            <a href="evoluation.html">
+                <button class="px-6 py-3 text-gray-600 flex items-center hover:text-[#0088cc]">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    Evolution
+                </button>
+            </a>
+        </div>
+        
+
+        <!-- Content Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Left Column -->
+            <section aria-labelledby="profile-heading" class="space-y-6">
+                <h2 id="profile-heading" class="sr-only">Observer Profile</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between pb-1">
+                        <span class="text-gray-700 font-semibold">Observer</span>
+                        <span class="text-gray-900 font-bold"><span id="profile-observer-name">Wafna</span></span>
+                    </div>
+                    <div class="flex justify-between pb-1">
+                        <span class="text-gray-700 font-semibold">Company</span>
+                        <span class="text-gray-900 font-bold" id="profile-observer-company">WeatherCloud Inc.</span>
+                    </div>
+                    <div class="flex justify-between pb-1">
+                        <span class="text-gray-700 font-semibold">Online since</span>
+                        <span class="text-gray-900 font-bold">November 30, 2021, 2:18 PM</span>
+                    </div>
+                    <div class="flex justify-between pb-1">
+                        <span class="text-gray-700 font-semibold">Views</span>
+                        <span class="text-gray-900 font-bold">1979</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-300 pb-1">
+                        <span class="text-gray-700 font-semibold">Followers</span>
+                        <a href="#" id="profile-followers-number" class="text-blue-600 underline font-bold">0</a>
+                    </div>
+                </div>
+
+                <!-- Location Information -->
+                <div class="space-y-4 border-b border-gray-300 mt-6">
+                    <div class="flex justify-between pb-1">
+                        <span class="text-gray-700 font-semibold">City</span>
+                        <span class="text-gray-900 font-bold">Ronchi dei Legionari</span>
+                    </div>
+                    <div class="flex justify-between pb-1">
+                        <span class="text-gray-700 font-semibold">Location</span>
+                        <span class="text-gray-900 font-bold">Gorizia (Italy)</span>
+                    </div>
+                    <div class="flex justify-between pb-1">
+                        <span class="text-gray-700 font-semibold">Local time</span>
+                        <span class="text-gray-900 font-bold">
+                            <span id="profile-localtime-container">May 5, 10:30 AM</span> (UTC+02:00)
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Coordinates Information -->
+                <div class="space-y-4 border-b border-gray-300 mt-6">
+                    <div class="flex justify-between pb-1">
+                        <span class="text-gray-700 font-semibold">Coordinates</span>
+                        <a href="#" class="text-blue-600 underline font-bold coordinates-link">45° 50' 34" N&nbsp;&nbsp;13° 28' 37" E</a>
+                    </div>
+                    <div class="flex justify-between pb-1">
+                        <span class="text-gray-700 font-semibold">Elevation</span>
+                        <span class="text-gray-900 font-bold">0.0 m</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-300 pb-1">
+                        <span class="text-gray-700 font-semibold">Height</span>
+                        <span class="text-gray-900 font-bold">0.0 m</span>
+                    </div>
+                </div>
+
+                <!-- Device Information -->
+                <div class="space-y-4 border-b border-gray-300 mt-6">
+                    <div class="flex justify-between pb-1">
+                        <span class="text-gray-700 font-semibold">Brand</span>
+                        <span class="text-gray-900 font-bold" id="profile-device-brand">1-Wire</span>
+                    </div>
+                    <div class="flex justify-between pb-1">
+                        <span class="text-gray-700 font-semibold">Model</span>
+                        <span class="text-gray-900 font-bold" id="profile-device-model">Weather Station</span>
+                    </div>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="space-y-4 border-b border-gray-300 mt-6">
+                    <div class="flex justify-between">
+                        <span class="text-gray-700 font-semibold">Website</span>
+                        <a target="_blank" rel="noopener" href="https://" class="text-blue-600 underline font-bold">Website</a>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-700 font-semibold">Description</span>
+                        <span class="text-gray-900 font-bold" id="profile-description">Weather station at WafnaMotoPark</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column -->
+            <div class="space-y-6">
+                <!-- Weather Information -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex justify-between items-start mb-8">
+                        <div class="flex items-start gap-6">
+                            <i class="fas fa-cloud text-6xl text-gray-600"></i>
+                            <div>
+                                <div class="text-6xl font-light">18°C</div>
+                                <div class="text-gray-600 mt-1">Feels like 18°</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="flex items-center justify-end mb-2">
+                                <i class="fas fa-location-arrow mr-2 text-gray-600 rotate-45"></i>
+                                <span>2 m/s ESE</span>
+                            </div>
+                            <div class="text-gray-600">1003.1 hPa</div>
+                            <div class="text-gray-600">362 m</div>
+                        </div>
+                        <div class="span6">
+                            <span id="nowcast-moonphase"><i class="wi wi-moon-alt-waning-crescent-1" style="font-size:120%;color:#777799;"></i> &nbsp;Waxing gibbous</span><br>
+                            <i class="wi wi-sunrise" style="color:#F2BD2C;"></i> <span id="nowcast-sunrise"><span>9:48 AM</span></span><br>
+                            <i class="wi wi-sunset" style="color:#FB911A;"></i> <span id="nowcast-sunset"><span>12:19 AM</span></span>
+                          </div>
+                    </div>
+
+                    <!-- Forecast -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                        <div class="text-center">
+                            <div class="text-gray-600 mb-2">Today</div>
+                            <i class="fas fa-cloud-rain text-3xl text-gray-600 mb-2"></i>
+                            <div>
+                                <span class="high-temp">18°</span>
+                                <span class="low-temp">13°</span>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-600 mb-2">Tomorrow</div>
+                            <i class="fas fa-cloud-sun-rain text-3xl text-gray-600 mb-2"></i>
+                            <div>
+                                <span class="high-temp">17°</span>
+                                <span class="low-temp">13°</span>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-600 mb-2">Wednesday 7</div>
+                            <i class="fas fa-cloud-sun-rain text-3xl text-gray-600 mb-2"></i>
+                            <div>
+                                <span class="high-temp">18°</span>
+                                <span class="low-temp">12°</span>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-600 mb-2">Thursday 8</div>
+                            <i class="fas fa-cloud-sun-rain text-3xl text-gray-600 mb-2"></i>
+                            <div>
+                                <span class="high-temp">17°</span>
+                                <span class="low-temp">9°</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Map Container -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Location Map</h3>
+                    <div class="map-container">
+                        <div id="map"></div>
+                        <!-- Loading Spinner -->
+                        <div class="map-loading absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
+                            <div class="spinner"></div>
+                        </div>
+                        <!-- Error Message -->
+                        <div class="map-error absolute inset-0 hidden flex items-center justify-center bg-white bg-opacity-90 z-10">
+                            <div class="text-center">
+                                <p class="text-red-600 mb-2">Unable to load the map</p>
+                                <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onclick="retryLoadMap()">
+                                    Retry
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-sm text-gray-500">
+            <div class="flex justify-center items-center space-x-4 mb-4">
+                <a href="#" class="hover:text-gray-700">Plans</a>
+                <span>•</span>
+                <a href="#" class="hover:text-gray-700">FAQ</a>
+                <span>•</span>
+                <a href="#" class="hover:text-gray-700">Legal</a>
+            </div>
+            <div class="flex justify-center space-x-6 mb-4">
+                <a href="#" class="hover:text-gray-700"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="hover:text-gray-700"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="hover:text-gray-700"><i class="fab fa-youtube"></i></a>
+            </div>
+            <div>
+                <span>© 2025 Weathercloud</span>
+                <span class="ml-4">Version 12.00</span>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Load Leaflet JS -->
+    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+    <!-- Enhanced Map Script -->
+    <script>
+        let map = null;
+        let mapLayer = null;
+
+        function initMap() {
+            console.log('Initializing map...');
+            try {
+                // Fixed coordinates for WafnaMotoPark
+                const coordinates = [45.842778, 13.476944]; // 45°50'34"N 13°28'37"E
+                
+                // Create map instance if it doesn't exist
+                if (!map) {
+                    // Initialize the map with specific options
+                    map = L.map('map', {
+                        center: coordinates,
+                        zoom: 13,
+                        zoomControl: false,  // We'll add it in a custom position
+                        attributionControl: true,
+                        scrollWheelZoom: true
+                    });
+
+                    // Add zoom control to top right
+                    L.control.zoom({
+                        position: 'topright'
+                    }).addTo(map);
+
+                    // Add tile layer with error handling
+                    mapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors',
+                        maxZoom: 19,
+                        tileSize: 512,
+                        zoomOffset: -1
+                    }).addTo(map);
+
+                    // Add marker with popup
+                    const marker = L.marker(coordinates).addTo(map);
+                    marker.bindPopup(`
+                        <div class="text-center">
+                            <strong class="block text-lg mb-1">WafnaMotoPark</strong>
+                            <span class="text-gray-600">Weather Station</span>
+                        </div>
+                    `).openPopup();
+
+                    // Add custom recenter control
+                    const recenterControl = L.Control.extend({
+                        options: {
+                            position: 'topright'
+                        },
+                        onAdd: function() {
+                            const container = L.DomUtil.create('div', 'custom-map-control');
+                            container.innerHTML = '<i class="fas fa-crosshairs"></i>';
+                            container.title = 'Recenter Map';
+                            
+                            container.onclick = function() {
+                                map.setView(coordinates, 13);
+                            };
+                            
+                            return container;
+                        }
+                    });
+
+                    map.addControl(new recenterControl());
+
+                    // Error handling for tile layer
+                    mapLayer.on('tileerror', handleMapError);
+
+                    // Handle map load success
+                    map.whenReady(() => {
+                        document.querySelector('.map-loading').classList.add('hidden');
+                        // Force a resize to ensure proper rendering
+                        setTimeout(() => map.invalidateSize(), 100);
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                handleMapError();
+            }
+        }
+
+        // Handle map errors
+        function handleMapError() {
+            document.querySelector('.map-loading').classList.add('hidden');
+            document.querySelector('.map-error').classList.remove('hidden');
+        }
+
+        // Retry loading the map
+        function retryLoadMap() {
+            document.querySelector('.map-error').classList.add('hidden');
+            document.querySelector('.map-loading').classList.remove('hidden');
+            
+            if (map) {
+                map.remove();
+                map = null;
+            }
+            
+            setTimeout(initMap, 1000);
+        }
+
+        // Function to check if Leaflet is loaded and initialize map
+        function checkAndInitialize() {
+            if (!window.L) {
+                console.log('Waiting for Leaflet...');
+                setTimeout(checkAndInitialize, 100);
+                return;
+            }
+            console.log('Leaflet loaded, initializing map...');
+            initMap();
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkAndInitialize);
+        } else {
+            checkAndInitialize();
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (map) {
+                map.invalidateSize();
+            }
+        });
+    </script>
+</body>
+</html>

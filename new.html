@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Temperature Graph</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      margin-top: 50px;
+    }
+    .container {
+      width: 80%;
+    }
+    canvas {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <canvas id="temperatureChart"></canvas>
+  </div>
+
+  <script>
+    // Data for the temperature chart
+    const labels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00']; // Hourly intervals
+    const data = {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Max Temperature',
+          data: [13.5, 14.5, 16.0, 17.5, 18.5, 19.0, 18.2, 16.5], // Example data for max temperature
+          borderColor: 'red',
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Avg Temperature',
+          data: [13.0, 14.0, 15.0, 16.0, 17.0, 17.5, 16.8, 15.0], // Example data for avg temperature
+          borderColor: 'orange',
+          backgroundColor: 'rgba(255, 159, 64, 0.2)',
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Min Temperature',
+          data: [12.5, 13.0, 14.0, 14.5, 15.0, 15.5, 14.8, 13.2], // Example data for min temperature
+          borderColor: 'green',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          fill: true,
+          tension: 0.4
+        }
+      ]
+    };
+
+    const config = {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+          },
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Time (HH:mm)',
+            },
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Temperature (°C)',
+            },
+            suggestedMin: 10,
+            suggestedMax: 20,
+          }
+        }
+      }
+    };
+
+    const ctx = document.getElementById('temperatureChart').getContext('2d');
+    const temperatureChart = new Chart(ctx, config);
+  </script>
+</body>
+</html>

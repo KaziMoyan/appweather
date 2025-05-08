@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherCloud - WafnaMotoPark</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .weather-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 1.75rem;
+            transition: all 0.3s ease-in-out;
+        }
+        .weather-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        .gauge-container {
+            width: 100%;
+            margin: 1rem 0 3rem;
+            position: relative;
+        }
+        .gauge-value {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            margin-top: 1rem;
+            color: #333;
+            transition: all 0.2s ease-in-out;
+        }
+        .temp-value { color: #ff4444; }
+        .humidity-value { color: #4285f4; }
+        .pressure-value { color: #a64dff; }
+        .weather-table {
+            width: 100%;
+            border-spacing: 0;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+            background-color: #f1f3f4;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .weather-table tr {
+            height: 1.75rem;
+        }
+        .weather-table th {
+            text-align: left;
+            font-weight: 600;
+            padding: 0.25rem 0;
+            background-color: #e0e0e0;
+        }
+        .weather-table td {
+            padding: 0.25rem 0;
+        }
+        .weather-table .unit {
+            width: 2rem;
+        }
+        .weather-table .period {
+            color: #666;
+            width: 4rem;
+        }
+        .weather-table .max {
+            text-align: right;
+            padding-right: 1rem;
+        }
+        .weather-table .min {
+            text-align: right;
+        }
+        .max-arrow {
+            color: #ff4444;
+        }
+        .min-arrow {
+            color: #4285f4;
+        }
+        .value-link {
+            border-bottom: 1px dotted #999;
+            cursor: help;
+        }
+        .gauge-svg {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 1rem;
+        }
+        .gauge-label {
+            font-size: 11px;
+            fill: #666;
+        }
+        .temp-bg { fill: #ff444415; }
+        .temp-fill { fill: #ff4444; }
+        .humidity-bg { fill: #4285f415; }
+        .humidity-needle { stroke: #4285f4; }
+        .pressure-bg { fill: #a64dff15; }
+        .pressure-needle { stroke: #a64dff; }
+        .gauge-container {
+            animation: bounceIn 1s ease-out;
+        }
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .weather-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 1.75rem;
+            transition: all 0.3s ease-in-out;
+        }
+        .weather-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        .gauge-container {
+            width: 100%;
+            margin: 1rem 0 3rem;
+            position: relative;
+        }
+        .gauge-value {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            margin-top: 1rem;
+            color: #333;
+            transition: all 0.2s ease-in-out;
+        }
+        .temp-value { color: #ff4444; }
+        .humidity-value { color: #4285f4; }
+        .pressure-value { color: #a64dff; }
+        .rain-value { color: #4285f4; }
+        .rainrate-value { color: #34a853; }
+        
+        /* Enhanced Table Styling */
+        .weather-table {
+            width: 100%;
+            border-spacing: 0;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        .weather-table th {
+            text-align: left;
+            font-weight: 600;
+            padding: 0.75rem;
+            background-color: #4285f4;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .weather-table td {
+            padding: 0.75rem;
+            text-align: right;
+            color: #666;
+        }
+        .weather-table .unit {
+            width: 2rem;
+            text-align: center;
+        }
+        .weather-table .period {
+            color: #666;
+            width: 4rem;
+        }
+        .weather-table .max,
+        .weather-table .total {
+            text-align: right;
+            padding-right: 1rem;
+        }
+        .weather-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        .weather-table tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .weather-table tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        /* Rain Bar */
+        .rain-bar {
+            width: 100%;
+            height: 30px;
+            background-color: #f0f4f8;
+            border-radius: 5px;
+            margin: 0.5rem 0;
+            position: relative;
+        }
+        .rain-fill {
+            height: 100%;
+            background-color: #4285f4;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        /* Rain Rate Gauge */
+        .gauge-svg {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 1rem;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .weather-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 1.75rem;
+            transition: all 0.3s ease-in-out;
+        }
+        .weather-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        .gauge-container {
+            width: 100%;
+            margin: 1rem 0 3rem;
+            position: relative;
+        }
+        .gauge-value {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            margin-top: 1rem;
+            color: #333;
+            transition: all 0.2s ease-in-out;
+        }
+        .temp-value { color: #ff4444; }
+        .humidity-value { color: #4285f4; }
+        .pressure-value { color: #a64dff; }
+        .rain-value { color: #4285f4; }
+        .rainrate-value { color: #34a853; }
+        .solar-value { color: #ff5722; }
+        .evaporation-value { color: #4caf50; }
+        .uv-value { color: #fbc02d; }
+        
+        /* Enhanced Table Styling */
+        .weather-table {
+            width: 100%;
+            border-spacing: 0;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        .weather-table th {
+            text-align: left;
+            font-weight: 600;
+            padding: 0.75rem;
+            background-color: #4285f4;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .weather-table td {
+            padding: 0.75rem;
+            text-align: right;
+            color: #666;
+        }
+        .weather-table .unit {
+            width: 2rem;
+            text-align: center;
+        }
+        .weather-table .period {
+            color: #666;
+            width: 4rem;
+        }
+        .weather-table .max,
+        .weather-table .total {
+            text-align: right;
+            padding-right: 1rem;
+        }
+        .weather-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        .weather-table tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .weather-table tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        /* Solar Radiation */
+        .gauge-svg {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 1rem;
+        }
+
+        /* Evapotranspiration Bar */
+        .evapo-bar {
+            width: 100%;
+            height: 30px;
+            background-color: #f0f4f8;
+            border-radius: 5px;
+            margin: 0.5rem 0;
+            position: relative;
+        }
+        .evapo-fill {
+            height: 100%;
+            background-color: #4caf50;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-[#0088cc] text-white py-4 px-6 shadow-md w-full">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-cloud text-2xl"></i>
+                <span class="text-xl font-normal tracking-wide">WeatherCloud</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="#" class="flex items-center gap-1 hover:text-gray-200">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <a href="#" class="flex items-center gap-1 hover:text-gray-200">
+                    <i class="fas fa-map"></i>
+                    <span>Map</span>
+                </a>
+                <button class="bg-[#4CAF50] px-4 py-1 rounded text-white hover:bg-[#45a049] transition duration-200">Sign up</button>
+                <button class="text-white hover:text-gray-200 transition duration-200">Sign in</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-6">
+        <!-- Weather Info Header -->
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h1 class="text-4xl text-gray-700 font-light mb-2">WafnaMotoPark</h1>
+                <div class="flex items-center text-gray-600 mb-2">
+                    <i class="fas fa-map-marker-alt mr-2"></i>
+                    <span>Ronchi dei Legionari | 6:45 AM (UTC+02:00)</span>
+                </div>
+                <div class="text-gray-500 text-sm">Last updated 15 minutes ago</div>
+            </div>
+            <div class="flex space-x-4">
+                <button class="p-2 text-[#0088cc] hover:bg-gray-100 rounded-full transition duration-200">
+                    <i class="fas fa-chart-line"></i>
+                </button>
+                <button class="p-2 text-[#0088cc] hover:bg-gray-100 rounded-full transition duration-200">
+                    <i class="far fa-star"></i>
+                </button>
+                <button class="p-2 text-[#0088cc] hover:bg-gray-100 rounded-full transition duration-200">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+                <button class="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition duration-200">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-gray-200 mb-6">
+            
+            <a href="index.html">
+                <button class="px-6 py-3 text-gray-600 flex items-center hover:text-[#0088cc]">
+                    <i class="fas fa-cloud mr-2"></i>
+                    Profile
+                </button>
+            </a>
+            <a href="current.html">
+                <button class="px-6 py-3 text-[#0088cc] border-b-2 border-[#0088cc] -mb-1 flex items-center">
+                    <i class="fas fa-user mr-2"></i>
+                    Current
+                </button>
+            </a>
+            <a href="wind.html">
+                <button class="px-6 py-3 text-gray-600 flex items-center hover:text-[#0088cc]">
+                    <i class="fas fa-wind mr-2"></i>
+                    Wind
+                </button>
+            </a>
+            <a href="evoluation.html">
+                <button class="px-6 py-3 text-gray-600 flex items-center hover:text-[#0088cc]">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    Evolution
+                </button>
+            </a>
+        </div>
+
+        <!-- Weather Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Temperature Card -->
+            <div class="weather-card">
+                <h2 class="text-base font-medium text-gray-700">Temperature</h2>
+                <div class="gauge-container">
+                    <svg class="gauge-svg" viewBox="0 0 200 160">
+                        <!-- Temperature Scale -->
+                        <g transform="translate(80, 10)">
+                            <!-- Background -->
+                            <rect class="temp-bg" x="0" y="0" width="40" height="120" rx="20"/>
+                            <!-- Fill -->
+                            <rect class="temp-fill" x="0" y="72" width="40" height="48" rx="20"/>
+                            <!-- Scale Labels -->
+                            <text x="-25" y="10" class="gauge-label">60</text>
+                            <text x="-25" y="34" class="gauge-label">40</text>
+                            <text x="-25" y="58" class="gauge-label">20</text>
+                            <text x="-25" y="82" class="gauge-label">0</text>
+                            <text x="-25" y="106" class="gauge-label">-20</text>
+                        </g>
+                    </svg>
+                    <div class="gauge-value temp-value">12.7°C</div>
+                </div>
+                <table class="weather-table">
+                    <tr>
+                        <th class="unit">°C</th>
+                        <th>
+                            <i class="fas fa-chevron-up max-arrow"></i> Max
+                        </th>
+                        <th>
+                            <i class="fas fa-chevron-down min-arrow"></i> Min
+                        </th>
+                    </tr>
+                    <tr>
+                        <td class="period">Daily</td>
+                        <td class="max"><span class="value-link" title="05/05/2025 14:29">21.7</span></td>
+                        <td class="min"><span class="value-link" title="05/05/2025 18:50">12.5</span></td>
+                    </tr>
+                    <tr>
+                        <td class="period">Monthly</td>
+                        <td class="max"><span class="value-link" title="05/01/2025 14:42">28.1</span></td>
+                        <td class="min"><span class="value-link" title="05/01/2025 05:28">11.7</span></td>
+                    </tr>
+                    <tr>
+                        <td class="period">Yearly</td>
+                        <td class="max"><span class="value-link" title="05/01/2025 14:42">28.1</span></td>
+                        <td class="min"><span class="value-link" title="04/12/2025 03:43">7.7</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Humidity Card -->
+            <div class="weather-card">
+                <h2 class="text-base font-medium text-gray-700">Humidity</h2>
+                <div class="gauge-container">
+                    <svg class="gauge-svg" viewBox="0 0 200 200">
+                        <!-- Humidity Gauge (Full Circle) -->
+                        <g transform="translate(100, 100)">
+                            <!-- Background -->
+                            <path class="humidity-bg" d="M -70,0 A 70,70 0 1 1 70,0" fill="none" stroke="#4285f415" stroke-width="15"/>
+                            <!-- Needle -->
+                            <line class="humidity-needle" x1="0" y1="0" x2="50" y2="-60" stroke-width="3"/>
+                            <!-- Scale Labels -->
+                            <text x="-60" y="10" class="gauge-label">0</text>
+                            <text x="-30" y="-40" class="gauge-label">20</text>
+                            <text x="0" y="-70" class="gauge-label">40</text>
+                            <text x="30" y="-40" class="gauge-label">60</text>
+                            <text x="60" y="10" class="gauge-label">80</text>
+                        </g>
+                    </svg>
+                    <div class="gauge-value humidity-value">89%</div>
+                </div>
+                <table class="weather-table">
+                    <tr>
+                        <th class="unit">%</th>
+                        <th>
+                            <i class="fas fa-chevron-up max-arrow"></i> Max
+                        </th>
+                        <th>
+                            <i class="fas fa-chevron-down min-arrow"></i> Min
+                        </th>
+                    </tr>
+                    <tr>
+                        <td class="period">Daily</td>
+                        <td class="max">89</td>
+                        <td class="min">61</td>
+                    </tr>
+                    <tr>
+                        <td class="period">Monthly</td>
+                        <td class="max">89</td>
+                        <td class="min">33</td>
+                    </tr>
+                    <tr>
+                        <td class="period">Yearly</td>
+                        <td class="max">95</td>
+                        <td class="min">25</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Atmospheric Pressure Card -->
+            <div class="weather-card">
+                <h2 class="text-base font-medium text-gray-700">Atmospheric Pressure</h2>
+                <div class="gauge-container">
+                    <svg class="gauge-svg" viewBox="0 0 200 200">
+                        <!-- Pressure Gauge (Full Circle) -->
+                        <g transform="translate(100, 100)">
+                            <!-- Background -->
+                            <path class="pressure-bg" d="M -70,0 A 70,70 0 1 1 70,0" fill="none" stroke="#a64dff15" stroke-width="15"/>
+                            <!-- Needle -->
+                            <line class="pressure-needle" x1="0" y1="0" x2="50" y2="-60" stroke-width="3"/>
+                            <!-- Scale Labels -->
+                            <text x="-60" y="10" class="gauge-label">950</text>
+                            <text x="-30" y="-40" class="gauge-label">970</text>
+                            <text x="0" y="-70" class="gauge-label">990</text>
+                            <text x="30" y="-40" class="gauge-label">1010</text>
+                            <text x="60" y="10" class="gauge-label">1030</text>
+                        </g>
+                    </svg>
+                    <div class="gauge-value pressure-value">1005.2</div>
+                </div>
+                <table class="weather-table">
+                    <tr>
+                        <th class="unit">hPa</th>
+                        <th>
+                            <i class="fas fa-chevron-up max-arrow"></i> Max
+                        </th>
+                        <th>
+                            <i class="fas fa-chevron-down min-arrow"></i> Min
+                        </th>
+                    </tr>
+                    
+                    <tr>
+                        <td class="period">Daily</td>
+                        <td class="max">1005.2</td>
+                        <td class="min">1002.1</td>
+                    </tr>
+                    <tr>
+                        <td class="period">Monthly</td>
+                        <td class="max">1019.3</td>
+                        <td class="min">1002.1</td>
+                    </tr>
+                    <tr>
+                        <td class="period">Yearly</td>
+                        <td class="max">1028.8</td>
+                        <td class="min">987.3</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+      
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Temperature Card -->
+            <div class="weather-card">
+                <h2 class="text-base font-medium text-gray-700">Dew point</h2>
+                <div class="gauge-container">
+                    <svg class="gauge-svg" viewBox="0 0 200 160">
+                        <!-- Temperature Scale -->
+                        <g transform="translate(80, 10)">
+                            <!-- Background -->
+                            <rect class="temp-bg" x="0" y="0" width="40" height="120" rx="20"/>
+                            <!-- Fill -->
+                            <rect class="temp-fill" x="0" y="72" width="40" height="48" rx="20"/>
+                            <!-- Scale Labels -->
+                            <text x="-25" y="10" class="gauge-label">60</text>
+                            <text x="-25" y="34" class="gauge-label">40</text>
+                            <text x="-25" y="58" class="gauge-label">20</text>
+                            <text x="-25" y="82" class="gauge-label">0</text>
+                            <text x="-25" y="106" class="gauge-label">-20</text>
+                        </g>
+                    </svg>
+                    <div class="gauge-value temp-value">11.2°C</div>
+                </div>
+                <table class="weather-table">
+                    <tr>
+                        <th class="unit">°C</th>
+                        <th>
+                            <i class="fas fa-chevron-up max-arrow"></i> Max
+                        </th>
+                        <th>
+                            <i class="fas fa-chevron-down min-arrow"></i> Min
+                        </th>
+                    </tr>
+                    <tr>
+                        <td class="period">Daily</td>
+                        <td class="max"><span class="value-link" title="05/05/2025 14:29">21.7</span></td>
+                        <td class="min"><span class="value-link" title="05/05/2025 18:50">12.5</span></td>
+                    </tr>
+                    <tr>
+                        <td class="period">Monthly</td>
+                        <td class="max"><span class="value-link" title="05/01/2025 14:42">28.1</span></td>
+                        <td class="min"><span class="value-link" title="05/01/2025 05:28">11.7</span></td>
+                    </tr>
+                    <tr>
+                        <td class="period">Yearly</td>
+                        <td class="max"><span class="value-link" title="05/01/2025 14:42">28.1</span></td>
+                        <td class="min"><span class="value-link" title="04/12/2025 03:43">7.7</span></td>
+                    </tr>
+                </table>
+            </div>
+
+             <!-- Temperature Card -->
+             <div class="weather-card">
+                <h2 class="text-base font-medium text-gray-700">Wind chill</h2>
+                <div class="gauge-container">
+                    <svg class="gauge-svg" viewBox="0 0 200 160">
+                        <!-- Temperature Scale -->
+                        <g transform="translate(80, 10)">
+                            <!-- Background -->
+                            <rect class="temp-bg" x="0" y="0" width="40" height="120" rx="20"/>
+                            <!-- Fill -->
+                            <rect class="temp-fill" x="0" y="72" width="40" height="48" rx="20"/>
+                            <!-- Scale Labels -->
+                            <text x="-25" y="10" class="gauge-label">60</text>
+                            <text x="-25" y="34" class="gauge-label">40</text>
+                            <text x="-25" y="58" class="gauge-label">20</text>
+                            <text x="-25" y="82" class="gauge-label">0</text>
+                            <text x="-25" y="106" class="gauge-label">-20</text>
+                        </g>
+                    </svg>
+                    <div class="gauge-value temp-value">14.7°C</div>
+                </div>
+                <table class="weather-table">
+                    <tr>
+                        <th class="unit">°C</th>
+                        <th>
+                            <i class="fas fa-chevron-up max-arrow"></i> Max
+                        </th>
+                        <th>
+                            <i class="fas fa-chevron-down min-arrow"></i> Min
+                        </th>
+                    </tr>
+                    <tr>
+                        <td class="period">Daily</td>
+                        <td class="max"><span class="value-link" title="05/05/2025 14:29">21.7</span></td>
+                        <td class="min"><span class="value-link" title="05/05/2025 18:50">12.5</span></td>
+                    </tr>
+                    <tr>
+                        <td class="period">Monthly</td>
+                        <td class="max"><span class="value-link" title="05/01/2025 14:42">28.1</span></td>
+                        <td class="min"><span class="value-link" title="05/01/2025 05:28">11.7</span></td>
+                    </tr>
+                    <tr>
+                        <td class="period">Yearly</td>
+                        <td class="max"><span class="value-link" title="05/01/2025 14:42">28.1</span></td>
+                        <td class="min"><span class="value-link" title="04/12/2025 03:43">7.7</span></td>
+                    </tr>
+                </table>
+            </div>
+            
+             <!-- Temperature Card -->
+             <div class="weather-card">
+                <h2 class="text-base font-medium text-gray-700">Heat index</h2>
+                <div class="gauge-container">
+                    <svg class="gauge-svg" viewBox="0 0 200 160">
+                        <!-- Temperature Scale -->
+                        <g transform="translate(80, 10)">
+                            <!-- Background -->
+                            <rect class="temp-bg" x="0" y="0" width="40" height="120" rx="20"/>
+                            <!-- Fill -->
+                            <rect class="temp-fill" x="0" y="72" width="40" height="48" rx="20"/>
+                            <!-- Scale Labels -->
+                            <text x="-25" y="10" class="gauge-label">60</text>
+                            <text x="-25" y="34" class="gauge-label">40</text>
+                            <text x="-25" y="58" class="gauge-label">20</text>
+                            <text x="-25" y="82" class="gauge-label">0</text>
+                            <text x="-25" y="106" class="gauge-label">-20</text>
+                        </g>
+                    </svg>
+                    <div class="gauge-value temp-value">14.7°C</div>
+                </div>
+                <table class="weather-table">
+                    <tr>
+                        <th class="unit">°C</th>
+                        <th>
+                            <i class="fas fa-chevron-up max-arrow"></i> Max
+                        </th>
+                        <th>
+                            <i class="fas fa-chevron-down min-arrow"></i> Min
+                        </th>
+                    </tr>
+                    <tr>
+                        <td class="period">Daily</td>
+                        <td class="max"><span class="value-link" title="05/05/2025 14:29">21.7</span></td>
+                        <td class="min"><span class="value-link" title="05/05/2025 18:50">12.5</span></td>
+                    </tr>
+                    <tr>
+                        <td class="period">Monthly</td>
+                        <td class="max"><span class="value-link" title="05/01/2025 14:42">28.1</span></td>
+                        <td class="min"><span class="value-link" title="05/01/2025 05:28">11.7</span></td>
+                    </tr>
+                    <tr>
+                        <td class="period">Yearly</td>
+                        <td class="max"><span class="value-link" title="05/01/2025 14:42">28.1</span></td>
+                        <td class="min"><span class="value-link" title="04/12/2025 03:43">7.7</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Humidity Card -->
+            <div class="weather-card">
+                <h2 class="text-base font-medium text-gray-700">Rain</h2>
+                <div class="rain-bar">
+                    <div class="rain-fill" style="width: 0%;"></div>
+                </div>
+                <div class="gauge-value rain-value">0.0 mm</div>
+                <table class="weather-table">
+                    <tr>
+                        <th class="unit">mm</th>
+                        <th><i class="fas fa-chevron-up max-arrow"></i> Max</th>
+                        <th><i class="fas fa-chevron-up total-arrow"></i> Total</th>
+                    </tr>
+                    <tr>
+                        <td class="period">Daily</td>
+                        <td class="max">0.0</td>
+                        <td class="total">0.0</td>
+                    </tr>
+                    <tr>
+                        <td class="period">Monthly</td>
+                        <td class="max">12.9</td>
+                        <td class="total">14.7</td>
+                    </tr>
+                    <tr>
+                        <td class="period">Yearly</td>
+                        <td class="max">14.6</td>
+                        <td class="total">41.8</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Rain Rate Card -->
+            <div class="weather-card">
+                <h2 class="text-base font-medium text-gray-700">Rain Rate</h2>
+                <svg class="gauge-svg" viewBox="0 0 200 200">
+                    <g transform="translate(100, 100)">
+                        <path class="rain-bg" d="M -70,0 A 70,70 0 1 1 70,0" fill="none" stroke="#4285f415" stroke-width="15"/>
+                        <line class="rainrate-needle" x1="0" y1="0" x2="50" y2="-60" stroke-width="3"/>
+                        <text x="-60" y="10" class="gauge-label">0</text>
+                        <text x="-30" y="-40" class="gauge-label">10</text>
+                        <text x="0" y="-70" class="gauge-label">20</text>
+                        <text x="30" y="-40" class="gauge-label">30</text>
+                        <text x="60" y="10" class="gauge-label">40</text>
+                    </g>
+                </svg>
+                <div class="gauge-value rainrate-value">0.0 mm/h</div>
+                <table class="weather-table">
+                    <tr>
+                        <th class="unit">mm/h</th>
+                        <th><i class="fas fa-chevron-up max-arrow"></i> Max</th>
+                    </tr>
+                    <tr>
+                        <td class="period">Daily</td>
+                        <td class="max">0.0</td>
+                    </tr>
+                    <tr>
+                        <td class="period">Monthly</td>
+                        <td class="max">13.8</td>
+                    </tr>
+                    <tr>
+                        <td class="period">Yearly</td>
+                        <td class="max">21.6</td>
+                    </tr>
+                </table>
+            </div>
+            
+            
+        </div>
+        <div >
+           
+    
+            <!-- Weather Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Solar Radiation Card -->
+                <div class="weather-card">
+                    <h2 class="text-base font-medium text-gray-700">Solar Radiation</h2>
+                    <svg class="gauge-svg" viewBox="0 0 200 200">
+                        <g transform="translate(100, 100)">
+                            <path class="solar-bg" d="M -70,0 A 70,70 0 1 1 70,0" fill="none" stroke="#ff5722" stroke-width="15"/>
+                            <line class="solar-needle" x1="0" y1="0" x2="60" y2="-50" stroke-width="3"/>
+                            <text x="-60" y="10" class="gauge-label">0</text>
+                            <text x="-30" y="-40" class="gauge-label">300</text>
+                            <text x="0" y="-70" class="gauge-label">600</text>
+                            <text x="30" y="-40" class="gauge-label">900</text>
+                            <text x="60" y="10" class="gauge-label">1200</text>
+                        </g>
+                    </svg>
+                    <div class="gauge-value solar-value">491.3 W/m²</div>
+                    <table class="weather-table">
+                        <tr>
+                            <th class="unit">W/m²</th>
+                            <th><i class="fas fa-chevron-up max-arrow"></i> Max</th>
+                            <th><i class="fas fa-clock"></i> Hours</th>
+                        </tr>
+                        <tr>
+                            <td class="period">Daily</td>
+                            <td class="max">491.3</td>
+                            <td class="total">1.0</td>
+                        </tr>
+                        <tr>
+                            <td class="period">Monthly</td>
+                            <td class="max">942.7</td>
+                            <td class="total">49.5</td>
+                        </tr>
+                        <tr>
+                            <td class="period">Yearly</td>
+                            <td class="max">1104.4</td>
+                            <td class="total">192.0</td>
+                        </tr>
+                    </table>
+                </div>
+    
+                <!-- Evapotranspiration Card -->
+                <div class="weather-card">
+                    <h2 class="text-base font-medium text-gray-700">Evapotranspiration</h2>
+                    <div class="evapo-bar">
+                        <div class="evapo-fill" style="width: 0%;"></div>
+                    </div>
+                    <div class="gauge-value evapotranspiration-value">0.0 mm</div>
+                    <table class="weather-table">
+                        <tr>
+                            <th class="unit">mm</th>
+                            <th><i class="fas fa-chevron-up max-arrow"></i> Max</th>
+                            <th><i class="fas fa-chevron-up total-arrow"></i> Total</th>
+                        </tr>
+                        <tr>
+                            <td class="period">Daily</td>
+                            <td class="max">0.0</td>
+                            <td class="total">0.0</td>
+                        </tr>
+                        <tr>
+                            <td class="period">Monthly</td>
+                            <td class="max">-</td>
+                            <td class="total">-</td>
+                        </tr>
+                        <tr>
+                            <td class="period">Yearly</td>
+                            <td class="max">-</td>
+                            <td class="total">-</td>
+                        </tr>
+                    </table>
+                </div>
+    
+                <!-- UV Index Card -->
+                <div class="weather-card">
+                    <h2 class="text-base font-medium text-gray-700">UV Index</h2>
+                    <svg class="gauge-svg" viewBox="0 0 200 200">
+                        <g transform="translate(100, 100)">
+                            <path class="uv-bg" d="M -70,0 A 70,70 0 1 1 70,0" fill="none" stroke="#fbc02d" stroke-width="15"/>
+                            <line class="uv-needle" x1="0" y1="0" x2="50" y2="-60" stroke-width="3"/>
+                            <text x="-60" y="10" class="gauge-label">0</text>
+                            <text x="-30" y="-40" class="gauge-label">3</text>
+                            <text x="0" y="-70" class="gauge-label">6</text>
+                            <text x="30" y="-40" class="gauge-label">8</text>
+                            <text x="60" y="10" class="gauge-label">11+</text>
+                        </g>
+                    </svg>
+                    <div class="gauge-value uv-value">4.0</div>
+                    <table class="weather-table">
+                        <tr>
+                            <th class="unit">-</th>
+                            <th><i class="fas fa-chevron-up max-arrow"></i> Max</th>
+                        </tr>
+                        <tr>
+                            <td class="period">Daily</td>
+                            <td class="max">4.0</td>
+                        </tr>
+                        <tr>
+                            <td class="period">Monthly</td>
+                            <td class="max">9.0</td>
+                        </tr>
+                        <tr>
+                            <td class="period">Yearly</td>
+                            <td class="max">10.0</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+    
+        </div>
+
+            <!-- Atmospheric Pressure Card -->
+            
+        
+
+    </div>
+</body>
+</html>
